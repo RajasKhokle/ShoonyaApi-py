@@ -1,5 +1,10 @@
-requests
+requests~=2.31.0
 websocket_client
 ./dist/NorenRestApiPy-0.0.22-py2.py3-none-any.whl
-pandas
-pyyaml
+pandas~=2.0.3
+pyyaml~=6.0.1
+
+NorenRestApiPy~=0.0.22
+pyotp~=2.8.0
+SQLAlchemy~=2.0.19
+mysql-connector-python~=8.1.0
