@@ -3,12 +3,13 @@ import pyotp
 import os
 from breeze_connect import BreezeConnect
 import urllib
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine  # pip install psycopg2, pymysql,mysql-connector
 import mysql.connector as connection  # pip install mysql-connector-python
 
 
 # Setup Shoonya Connection Details
-# TODO : Get the password and API details from the database and decrypt using pepper stored in windows env variable
+# TODO : Get the password and API details from the database and decrypt using salt from db and
+#  pepper from windows keyring using Argon2id
 
 def login_shoonya(user_string='Prakash'):
     user_string = user_string.upper()[0:3]
@@ -23,9 +24,11 @@ def login_shoonya(user_string='Prakash'):
     api = ShoonyaApiPy()
     try:
         ret_data = api.login(userid=user, password=pwd, twoFA=factor2, vendor_code=vc, api_secret=app_key, imei=imei)
+        print("Connected Successfully to ", user)
+        return api, ret_data
     except Exception as E:
         print("Following Exception has occurred - ", E)
-    return api, ret_data
+        return None
 
 
 def login_icici(user='veena'):
@@ -55,7 +58,6 @@ def connect_postgres(db_name='finance'):
     postgres_pwd = os.getenv("postgres_pwd")
     postgres_port = '5432'
     postgres_host = "localhost"
-    db_name = 'finance'
     conn_string = 'postgresql://' + postgres_login + ":" + postgres_pwd + "@" + postgres_host + ":" + postgres_port + \
                   "/" + db_name
     db = create_engine(conn_string)
@@ -65,13 +67,27 @@ def connect_postgres(db_name='finance'):
 
 def connect_mysql(db_name='trading'):
     mysql_host = "localhost"
-    mysql_user = "shoonya"
+    mysql_user = "root"
     mysql_password = os.getenv("MYSQL_SHOONYA_PWD")
-    mysql_password = "Shoonya@123"
+    mysql_password = "Orion_777"
     mysql_port = '2603'
     try:
-        mydb = connection.connect(host=mysql_host, database=db_name, user=mysql_user, passwd=mysql_password,
-                                  use_pure=True, port=mysql_port)
-        return mydb
+        db_connection_str = 'mysql+pymysql://' + mysql_user + ':' + mysql_password + '@' + mysql_host + ':' + \
+                            mysql_port + '/' + db_name
+        db_connection = create_engine(db_connection_str)
+        return db_connection
     except Exception as e:
         print("Cannot connect to Mysql Db : ", str(e))
+
+    # try:
+    #     mydb = connection.connect(host=mysql_host, database=db_name, user=mysql_user, passwd=mysql_password,
+    #                               use_pure=True, port=mysql_port)
+    #     return mydb
+
+
+def connect_dhan(user):
+    return None
+
+
+def connect_ibkr(user):
+    return None

@@ -8,3 +8,5 @@ NorenRestApiPy~=0.0.22
 pyotp~=2.8.0
 SQLAlchemy~=2.0.19
 mysql-connector-python~=8.1.0
+progressbar~=2.5
+numpy~=1.25.1
