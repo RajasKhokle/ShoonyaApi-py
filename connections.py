@@ -67,9 +67,8 @@ def connect_postgres(db_name='finance'):
 
 def connect_mysql(db_name='trading'):
     mysql_host = "localhost"
-    mysql_user = "root"
+    mysql_user = "shoonya"
     mysql_password = os.getenv("MYSQL_SHOONYA_PWD")
-    mysql_password = "Orion_777"
     mysql_port = '2603'
     try:
         db_connection_str = 'mysql+pymysql://' + mysql_user + ':' + mysql_password + '@' + mysql_host + ':' + \

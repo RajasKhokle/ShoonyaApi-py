@@ -7,14 +7,13 @@
 import datetime as dt
 # import math
 import pandas as pd
-from api_helper import ShoonyaApiPy, get_time
-import json
+# from api_helper import ShoonyaApiPy, get_time
+# import json
 import connections as conn
 import numpy as np
-import update_symbols
 import helper_functions as func
 
-update_symbols.update_symbol_files()  # First update all the symbol files
+func.update_symbol_files()  # First update all the symbol files
 
 
 # Get available Margins
