@@ -6,21 +6,23 @@
 # Import Libraries
 import datetime as dt
 # import math
-import pandas as pd
 # from api_helper import ShoonyaApiPy, get_time
 # import json
+import pandas as pd
 import connections as conn
 import numpy as np
 import helper_functions as func
 
 func.update_symbol_files()  # First update all the symbol files
 
-
-# Get available Margins
-
-
 # Connect to Postgres/mysql
-mysql_conn = conn.connect_mysql()
+try:
+    mysql_conn = conn.connect_mysql()
+    db_flag = True
+except Exception as e:
+    print("Cannot connect to MYSQL Server. IF you proceed, this transaction will not be recorded by the system.", e)
+    db_flag = False
+# postgres_con = conn.connect_postgres('finance')
 path = "D:\Software_development\\"
 # Connect to Shoonya
 s_con_rad, ret_rad = conn.login_shoonya('Radhika')
@@ -29,9 +31,6 @@ s_con_pra, ret_pra = conn.login_shoonya('Prakash')
 # s_con_raj, ret_raj = conn.login_shoonya('Rajas')
 # s_con_anu, ret_anu = conn.login_shoonya('Anuradha')
 # s_con_ree, ret_ree = conn.login_shoonya('Reema')
-
-# Connect to Postgres/mysql
-# postgres_con = conn.connect_postgres('finance')
 
 # User independent algo code is here
 # Symbol input queries
@@ -47,10 +46,13 @@ nfo_query = '''Select * FROM trading.nfo_symbols'''
 security_type = 'options'
 security_exchange = "NSE"
 option_exchange = "NFO"
-# df_nse = pd.read_csv(path+"NSE_symbols.txt")  # Uncomment if mysql server is not available
-df_nse = pd.read_sql(nse_query, mysql_conn)
-# df_nfo = pd.read_csv(path+"NFO_symbols.txt")  # Uncomment if mysql server is not available
-df_nfo = pd.read_sql(nfo_query, mysql_conn)
+if db_flag:
+    df_nse = pd.read_sql(nse_query, mysql_conn)
+    df_nfo = pd.read_sql(nfo_query, mysql_conn)
+else:
+    df_nse = pd.read_csv(path + "NSE_symbols.txt")
+    df_nfo = pd.read_csv(path + "NFO_symbols.txt")
+
 df_token = pd.concat([df_nse, df_nfo], ignore_index=True)
 base_security = "NIFTY INDEX"  # Should be changed to required index/stock
 if base_security in ['NIFTY INDEX', 'NIFTY BANK', 'FINNIFTY']:
@@ -94,11 +96,13 @@ atm_PE_option_tsym = (security_name + nearest_expiry + "P" + nearest_atm_strike_
 # print(df_chain)
 atm_strike = round(curr_sec_price / 50) * 50
 # Find 3.5% away value and corresponding option symbols
-percent = 0.035
+percent = 0.025
 minus_strike = round((atm_strike - percent * atm_strike) / 50) * 50
 plus_strike = round((atm_strike + percent * atm_strike) / 50) * 50
 minus_pe_sym = (security_name + nearest_expiry + "P" + str(minus_strike)).upper()
 plus_ce_sym = (security_name + nearest_expiry + "C" + str(plus_strike)).upper()
+print('CE Strike : ', plus_strike)
+print('PE Strike : ', minus_strike)
 
 # Get option pricing
 pe_token_id = str(df_token[df_token['TradingSymbol'] == minus_pe_sym]['Token'].iloc[0])
@@ -107,6 +111,9 @@ quote_pe = s_con_pra.get_quotes(exchange=option_exchange, token=pe_token_id)
 quote_ce = s_con_pra.get_quotes(exchange=option_exchange, token=ce_token_id)
 curr_pe_price = float(quote_pe["lp"])
 curr_ce_price = float(quote_ce["lp"])
+print('CE Strike : ', plus_strike, " @ price ", curr_ce_price)
+print('PE Strike : ', minus_strike, " @ price ", curr_pe_price)
+place_limit_order(sym=minus_pe_sym, lmt_price=curr_pe_price, action="S")
 
 # Calculate no. of lots based on margin available and margin required
 # place orders
@@ -124,4 +131,9 @@ curr_ce_price = float(quote_ce["lp"])
 
 # Web FrontEnd
 
+# TODO: Function for trailing Stop Loss
+# TODO: Function for updating the tick data in database
+# TODO: Function for detecting the momentum and generating the buy and sell signals
+# TODO: Function to calculate the option greeks
+# TODO: Function for bet sizing according to the margins available
 #
